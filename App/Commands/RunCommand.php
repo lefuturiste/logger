@@ -33,7 +33,7 @@ class RunCommand extends Command
 		$output->writeln('Running application...');
 
 		//reader
-		$geoLitePath = "D:\workspace\logger\GeoLite2-City.mmdb";
+		$geoLitePath = "/opt/logger/GeoLite2-City.mmdb";
 		$reader = new Reader($geoLitePath);
 
 		$output->writeln("- [X] Load {$geoLitePath}");
@@ -41,7 +41,7 @@ class RunCommand extends Command
 		$builder = ClientBuilder::create();
 
 		$builder->setHosts(
-			['192.168.0.21:9200']
+			['localhost:9200']
 		);
 
 		$client = $builder->build();
@@ -141,7 +141,7 @@ class RunCommand extends Command
 								];
 								$body = array_merge($body, $extraBody);
 								$params = [
-									'index' => "loggerv2-{$date->year}.{$date->month}.{$date->day}",
+									'index' => "logger-{$date->year}.{$date->month}.{$date->day}",
 									'type' => 'nginx-access',
 									'body' => $body
 								];
