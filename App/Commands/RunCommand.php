@@ -146,7 +146,11 @@ class RunCommand extends Command
 									'body' => $body
 								];
 
-								$client->index($params);
+								try {
+									$client->index($params);
+								}catch (BadRequest400Exception $e){
+
+								}
 
 								$output->writeln("- [X] Send data to elasticseach");
 
