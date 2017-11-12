@@ -1,0 +1,19 @@
+{
+    "require": {
+        "coduo/php-matcher": "^2.3",
+        "symfony/console": "^3.3",
+        "simplon/mysql": "^2.2",
+        "robmorgan/phinx": "^0.9.1",
+        "vlucas/phpdotenv": "^2.4",
+        "geoip2/geoip2": "^2.7",
+        "whichbrowser/parser": "^2.0",
+        "elasticsearch/elasticsearch": "^5.3",
+        "nesbot/carbon": "^1.22",
+        "symfony/yaml": "^3.3"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "App/"
+        }
+    }
+}
