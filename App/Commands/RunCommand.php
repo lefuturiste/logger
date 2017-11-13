@@ -123,7 +123,9 @@ class RunCommand extends Command
 								//fix os version array conflict
 								if (isset($agent['os']['version'])){
 									if (!is_array($agent['os']['version'])){
-										$agent['os']['version']['value'] = $agent['os']['version'];
+										$version = $agent['os']['version'];
+										$agent['os']['version'] = (array)[];
+										$agent['os']['version']['value'] = $version;
 									}
 								}
 
