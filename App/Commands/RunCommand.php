@@ -9,8 +9,6 @@ use Elasticsearch\ClientBuilder;
 use Elasticsearch\Common\Exceptions\BadRequest400Exception;
 use GeoIp2\Database\Reader;
 use Psr\Log\InvalidArgumentException;
-use Simplon\Mysql\Mysql;
-use Simplon\Mysql\PDOConnector;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -33,16 +31,21 @@ class RunCommand extends Command
 		$output->writeln('Running application...');
 
 		//reader
-		$geoLitePath = "/opt/logger/GeoLite2-City.mmdb";
-		$reader = new Reader($geoLitePath);
+		$geoLitePath = getenv('GEOLITE_PATH');
+		$reader = new Reader(
+			getenv('GEOLITE_PATH')
+		);
 
 		$output->writeln("- [X] Load {$geoLitePath}");
 
+		//reader
 		$builder = ClientBuilder::create();
 
 		$builder->setHosts(
-			['localhost:9200']
+			[getenv('ELASTICSEARCH_HOST')]
 		);
+
+		$indexName = getenv('ELATICSEARCH_INDEX_NAME');
 
 		$client = $builder->build();
 
@@ -119,6 +122,17 @@ class RunCommand extends Command
 
 								//3. GET Request information
 								$request = explode(' ', $line['request']);
+								//content type
+								if (strpos($line['content_type'] , ';' ) !== false){
+									$charsetInfos = explode(';', $line['content_type']);
+									$charset = $charsetInfos[0];
+									$content_type = $charsetInfos[1];
+								}else{
+									$content_type = $line['content_type'];
+									$charset = '';
+								}
+								$charset = str_replace(' ', '', $charset);
+								$content_type = str_replace(' ', '', $content_type);
 
 								$date = Carbon::now();
 								$body = [
@@ -135,13 +149,15 @@ class RunCommand extends Command
 									'request_time' => (float)$line['request_time'],
 									'http_referrer' => $line['http_referrer'],
 									'request' => $line['request'],
+									'content_type' => $content_type,
+									'charset' => $charset,
 									'status' => $line['status'],
 									'remote_user' => $line['remote_user'],
 									'http_user_agent' => $agent
 								];
 								$body = array_merge($body, $extraBody);
 								$params = [
-									'index' => "logger-{$date->year}.{$date->month}.{$date->day}",
+									'index' => "{$indexName}-{$date->year}.{$date->month}.{$date->day}",
 									'type' => 'nginx-access',
 									'body' => $body
 								];
@@ -149,7 +165,7 @@ class RunCommand extends Command
 								try {
 									$client->index($params);
 								}catch (BadRequest400Exception $e){
-
+									$output->writeln("<error>[ERR] - ERROR while send data to elasticseach : {$e->getMessage()} - {$e->getCode()}</error>");
 								}
 
 								$output->writeln("- [X] Send data to elasticseach");
