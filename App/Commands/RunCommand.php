@@ -113,12 +113,19 @@ class RunCommand extends Command
 									];
 									$extraBody['location'] = $location;
 								} catch (\InvalidArgumentException $e) {
-
+									$output->writeln("<error>[ERR] - ERROR while parse ip data : {$e->getMessage()} - {$e->getCode()}</error>");
 								}
 
 								//2. GET USER AGENT
 								$result = new Parser($line['http_user_agent']);
 								$agent = $result->toArray();
+
+								//fix os version array conflict
+								if (isset($agent['os']['version'])){
+									if (!is_array($agent['os']['version'])){
+										$agent['os']['version']['value'] = $agent['os']['version'];
+									}
+								}
 
 								//3. GET Request information
 								$request = explode(' ', $line['request']);
