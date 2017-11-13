@@ -164,12 +164,10 @@ class RunCommand extends Command
 
 								try {
 									$client->index($params);
+									$output->writeln("- [X] Send data to elasticseach");
 								}catch (BadRequest400Exception $e){
 									$output->writeln("<error>[ERR] - ERROR while send data to elasticseach : {$e->getMessage()} - {$e->getCode()}</error>");
 								}
-
-								$output->writeln("- [X] Send data to elasticseach");
-
 							}
 							$lineCountTemp = $count;
 							$hashTemp = $hash;
