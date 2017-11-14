@@ -140,7 +140,7 @@ class RunCommand extends Command
 									$charset = strtoupper($charset);
 								}else{
 									$contentType = $line['content_type'];
-									$charset = '';
+									$charset = 'none';
 								}
 								$charset = str_replace(' ', '', $charset);
 								$contentType = str_replace(' ', '', $contentType);
