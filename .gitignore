@@ -5,3 +5,5 @@ composer.lock
 .idea/*
 .env
 files.yml
+error.txt
+somefile.txt

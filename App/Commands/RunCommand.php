@@ -55,8 +55,14 @@ class RunCommand extends Command
 
 		$files = Yaml::parse(file_get_contents('./files.yml'));
 
-		$hashTemp = NULL;
-		$lineCountTemp = 0;
+
+		$lineCountTemp = [];
+		$hashTemp = [];
+
+		foreach ($files AS $file) {
+			$lineCountTemp[$file['id']] = 0;
+			$hashTemp[$file['id']] = NULL;
+		}
 		while (true) {
 			foreach ($files AS $file) {
 				//on hash le fichier
@@ -66,128 +72,186 @@ class RunCommand extends Command
 				$count = count($lines);
 
 				//si c'est la première fois on ne fait rien
-				if ($hashTemp != NULL){
-					if ($hash == $hashTemp AND $count = $lineCountTemp) {
+				if ($hashTemp[$file['id']] != NULL) {
+
+					if ($hash == $hashTemp[$file['id']] AND $count = $lineCountTemp[$file['id']]) {
+						//aucun nouveau contenu
 //						$output->writeln("- [X] NONE New content found on {$file['path']} (0 new(s) lines)");
 					} else {
+						//nouveau contenu detecté
 						//on filtre les donnés et on les stores
 						//on génére un tableau qui contient que les nouvelles lignes
 						//on prend le nb de nouvelles lignes
-						$newLinesCount = $count - $lineCountTemp;
+						$newLinesCount = $count - (int)$lineCountTemp[$file['id']];
 						if ($newLinesCount > 0) {
 							//on prend les dernières lignes
 							$data = file($file['path']);
 							$i = 0;
 							$newLines = [];
 
-							$output->writeln("- [X] New content found on {$file['path']} ($newLinesCount new(s) lines)");
+							$output->writeln("- [X] New content found on {$file['path']} ({$newLinesCount} new(s) lines)");
 
 							while ($newLinesCount != $i) {
-								$line = $data[count($data) - ($newLinesCount - $i + 1)];
+								$line = $data[count($data) - ($newLinesCount - $i)];
 								array_push($newLines, $line);
 								$i++;
 							}
 
 							//for each line, generate rich data from base nginx data
 							foreach ($newLines AS $line) {
-								//decode
-								$line = json_decode($line, 1);
-								$extraBody = [];
-								try {
-									//1. GET GEO IP location
-									$record = $reader->city($line['http_x_forwarded_for']);
+								//on choisis le mode de parse
+								switch ($file['type']) {
+									case 'nginx-access':
+										//decode
+										$line = json_decode($line, 1);
+										$extraBody = [];
+										try {
+											//1. GET GEO IP location
+											$record = $reader->city($line['http_x_forwarded_for']);
 
-									$location = [
-										'country' => [
-											'code' => $record->country->isoCode,
-											'name' => $record->country->name,
-										],
-										'city' => $record->city->name,
-										'postal' => $record->postal->code,
-										'max_subdivision' => [
-											'code' => $record->mostSpecificSubdivision->isoCode,
-											'name' => $record->mostSpecificSubdivision->name
-										],
-										'location' => "{$record->location->latitude}, {$record->location->longitude}",
-										'latitude' => $record->location->latitude,
-										'longitude' => $record->location->longitude
+											$location = [
+												'country' => [
+													'code' => $record->country->isoCode,
+													'name' => $record->country->name,
+												],
+												'city' => $record->city->name,
+												'postal' => $record->postal->code,
+												'max_subdivision' => [
+													'code' => $record->mostSpecificSubdivision->isoCode,
+													'name' => $record->mostSpecificSubdivision->name
+												],
+												'location' => "{$record->location->latitude}, {$record->location->longitude}",
+												'latitude' => $record->location->latitude,
+												'longitude' => $record->location->longitude
+											];
+											$extraBody['location'] = $location;
+										} catch (\InvalidArgumentException $e) {
+											$output->writeln("<error>[ERR] - ERROR while parse ip data : {$e->getMessage()} - {$e->getCode()}</error>");
+										}
+
+										//2. GET USER AGENT
+										$result = new Parser($line['http_user_agent']);
+										$agent = $result->toArray();
+
+										//fix os version array conflict
+										if (isset($agent['os']['version'])) {
+											if (!is_array($agent['os']['version'])) {
+												$version = $agent['os']['version'];
+												$agent['os']['version'] = (array)[];
+												$agent['os']['version']['value'] = $version;
+											}
+										}
+
+										//3. GET Request information
+										$request = explode(' ', $line['request']);
+										//content type
+										if (strpos($line['content_type'], ';') !== false) {
+											$charsetInfos = explode(';', $line['content_type']);
+											$contentType = $charsetInfos[0];
+											$charset = str_replace('charset=', '', $charsetInfos[1]);
+											$charset = strtoupper($charset);
+										} else {
+											$contentType = $line['content_type'];
+											$charset = 'none';
+										}
+										$charset = str_replace(' ', '', $charset);
+										$contentType = str_replace(' ', '', $contentType);
+
+										$date = Carbon::now();
+										$body = [
+											'created_at' => $date->toAtomString(),
+											'virtual_host' => $line['virtual_host'],
+											'url' => $request[1],
+											'method' => $request[0],
+											'http_version' => $request[2],
+											'http_x_forwarded_for' => $line['http_x_forwarded_for'],
+											'http_user_agent_raw' => $line['http_user_agent'],
+											'remote_addr' => $line['remote_addr'],
+											'time_local' => $line['time_local'],
+											'body_bytes_sent' => (int)$line['body_bytes_sent'],
+											'request_time' => (float)$line['request_time'],
+											'http_referrer' => $line['http_referrer'],
+											'request' => $line['request'],
+											'content_type' => $contentType,
+											'charset' => $charset,
+											'content_type_raw' => $line['content_type'],
+											'status' => $line['status'],
+											'remote_user' => $line['remote_user'],
+											'http_user_agent' => $agent
+										];
+										$body = array_merge($body, $extraBody);
+										break;
+
+									case 'nginx-error':
+										$parser = new \TM\ErrorLogParser\Parser(\TM\ErrorLogParser\Parser::TYPE_NGINX); // or TYPE_NGINX;
+										$entry = $parser->parse($line);
+
+										$request = explode(' ', $line['request']);
+										$date = Carbon::now();
+										$extraBody = [];
+										try {
+											//1. GET GEO IP location
+											$record = $reader->city($entry->client);
+
+											$location = [
+												'country' => [
+													'code' => $record->country->isoCode,
+													'name' => $record->country->name,
+												],
+												'city' => $record->city->name,
+												'postal' => $record->postal->code,
+												'max_subdivision' => [
+													'code' => $record->mostSpecificSubdivision->isoCode,
+													'name' => $record->mostSpecificSubdivision->name
+												],
+												'location' => "{$record->location->latitude}, {$record->location->longitude}",
+												'latitude' => $record->location->latitude,
+												'longitude' => $record->location->longitude
+											];
+											$extraBody['location'] = $location;
+										} catch (\InvalidArgumentException $e) {
+											$output->writeln("<error>[ERR] - ERROR while parse ip data : {$e->getMessage()} - {$e->getCode()}</error>");
+										}
+
+										$body = [
+											'created_at' => $date->toAtomString(),
+											'time_local' => $entry->date,
+											'level' => $entry->type,
+											'message' => $entry->message,
+											'virtual_host' => $entry->server,
+											'request' => $entry->host,
+											'url' => $request[1],
+											'method' => $request[0],
+											'http_version' => $request[2],
+											'remote_addr' => $entry->client,
+										];
+										$body = array_merge($body, $extraBody);
+										break;
+								}
+
+								if (isset($body)) {
+									$params = [
+										'index' => "{$indexName}-{$date->year}.{$date->month}.{$date->day}",
+										'type' => $file['type'],
+										'body' => $body
 									];
-									$extraBody['location'] = $location;
-								} catch (\InvalidArgumentException $e) {
-									$output->writeln("<error>[ERR] - ERROR while parse ip data : {$e->getMessage()} - {$e->getCode()}</error>");
-								}
-
-								//2. GET USER AGENT
-								$result = new Parser($line['http_user_agent']);
-								$agent = $result->toArray();
-
-								//fix os version array conflict
-								if (isset($agent['os']['version'])){
-									if (!is_array($agent['os']['version'])){
-										$version = $agent['os']['version'];
-										$agent['os']['version'] = (array)[];
-										$agent['os']['version']['value'] = $version;
+									try {
+										$client->index($params);
+										$output->writeln("- [X] Send data to elasticseach");
+									} catch (BadRequest400Exception $e) {
+										$output->writeln("<error>[ERR] - ERROR while send data to elasticseach : {$e->getMessage()} - {$e->getCode()}</error>");
 									}
-								}
-
-								//3. GET Request information
-								$request = explode(' ', $line['request']);
-								//content type
-								if (strpos($line['content_type'] , ';' ) !== false){
-									$charsetInfos = explode(';', $line['content_type']);
-									$contentType = $charsetInfos[0];
-									$charset = str_replace('charset=', '', $charsetInfos[1]);
-									$charset = strtoupper($charset);
-								}else{
-									$contentType = $line['content_type'];
-									$charset = 'none';
-								}
-								$charset = str_replace(' ', '', $charset);
-								$contentType = str_replace(' ', '', $contentType);
-
-								$date = Carbon::now();
-								$body = [
-									'created_at' => $date->toAtomString(),
-									'virtual_host' => $line['virtual_host'],
-									'url' => $request[1],
-									'method' => $request[0],
-									'http_version' => $request[2],
-									'http_x_forwarded_for' => $line['http_x_forwarded_for'],
-									'http_user_agent_raw' => $line['http_user_agent'],
-									'remote_addr' => $line['remote_addr'],
-									'time_local' => $line['time_local'],
-									'body_bytes_sent' => (int)$line['body_bytes_sent'],
-									'request_time' => (float)$line['request_time'],
-									'http_referrer' => $line['http_referrer'],
-									'request' => $line['request'],
-									'content_type' => $contentType,
-									'charset' => $charset,
-									'content_type_raw' => $line['content_type'],
-									'status' => $line['status'],
-									'remote_user' => $line['remote_user'],
-									'http_user_agent' => $agent
-								];
-								$body = array_merge($body, $extraBody);
-								$params = [
-									'index' => "{$indexName}-{$date->year}.{$date->month}.{$date->day}",
-									'type' => 'nginx-access',
-									'body' => $body
-								];
-
-								try {
-									$client->index($params);
-									$output->writeln("- [X] Send data to elasticseach");
-								}catch (BadRequest400Exception $e){
-									$output->writeln("<error>[ERR] - ERROR while send data to elasticseach : {$e->getMessage()} - {$e->getCode()}</error>");
+								} else {
+									$output->writeln("- [X] None data to elasticseach");
 								}
 							}
-							$lineCountTemp = $count;
-							$hashTemp = $hash;
+							$lineCountTemp[$file['id']] = $count;
+							$hashTemp[$file['id']] = $hash;
 						}
 					}
-				}else{
-					$hashTemp = $hash;
-					$lineCountTemp = $count;
+				} else {
+					$lineCountTemp[$file['id']] = $count;
+					$hashTemp[$file['id']] = $hash;
 				}
 			}
 			sleep(5);

@@ -1,1 +1,6 @@
 - path: ./somefile.txt
+  type: nginx-access
+  id: hqs
+- path: ./error.txt
+  type: nginx-error
+  id: qjdsjsdq
