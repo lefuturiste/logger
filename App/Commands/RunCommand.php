@@ -135,14 +135,17 @@ class RunCommand extends Command
 								//content type
 								if (strpos($line['content_type'] , ';' ) !== false){
 									$charsetInfos = explode(';', $line['content_type']);
-									$charset = $charsetInfos[0];
-									$content_type = $charsetInfos[1];
+									var_dump($charsetInfos);
+									var_dump($line['content_type']);
+									$contentType = $charsetInfos[0];
+									$charset = str_replace('charset=', '', $charsetInfos[1]);
+									$charset = strtoupper($charset);
 								}else{
-									$content_type = $line['content_type'];
+									$contentType = $line['content_type'];
 									$charset = '';
 								}
 								$charset = str_replace(' ', '', $charset);
-								$content_type = str_replace(' ', '', $content_type);
+								$contentType = str_replace(' ', '', $contentType);
 
 								$date = Carbon::now();
 								$body = [
@@ -159,8 +162,9 @@ class RunCommand extends Command
 									'request_time' => (float)$line['request_time'],
 									'http_referrer' => $line['http_referrer'],
 									'request' => $line['request'],
-									'content_type' => $content_type,
+									'content_type' => $contentType,
 									'charset' => $charset,
+									'content_type_raw' => $line['content_type'],
 									'status' => $line['status'],
 									'remote_user' => $line['remote_user'],
 									'http_user_agent' => $agent
