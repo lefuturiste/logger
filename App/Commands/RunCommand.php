@@ -135,8 +135,6 @@ class RunCommand extends Command
 								//content type
 								if (strpos($line['content_type'] , ';' ) !== false){
 									$charsetInfos = explode(';', $line['content_type']);
-									var_dump($charsetInfos);
-									var_dump($line['content_type']);
 									$contentType = $charsetInfos[0];
 									$charset = str_replace('charset=', '', $charsetInfos[1]);
 									$charset = strtoupper($charset);
