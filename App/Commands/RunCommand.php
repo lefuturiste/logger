@@ -102,6 +102,7 @@ class RunCommand extends Command
 											'code' => $record->country->isoCode,
 											'name' => $record->country->name,
 										],
+										'city' => $record->city->name,
 										'postal' => $record->postal->code,
 										'max_subdivision' => [
 											'code' => $record->mostSpecificSubdivision->isoCode,
