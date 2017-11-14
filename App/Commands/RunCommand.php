@@ -229,7 +229,7 @@ class RunCommand extends Command
 					$hashTemp[$file['id']] = $hash;
 				}
 			}
-			sleep(5);
+			sleep(2);
 		}
 	}
 }
