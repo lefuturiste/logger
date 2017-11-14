@@ -97,6 +97,7 @@ class RunCommand extends Command
 								$i++;
 							}
 
+
 							//for each line, generate rich data from base nginx data
 							foreach ($newLines AS $line) {
 								//on choisis le mode de parse
@@ -186,46 +187,20 @@ class RunCommand extends Command
 										$parser = new \TM\ErrorLogParser\Parser(\TM\ErrorLogParser\Parser::TYPE_NGINX); // or TYPE_NGINX;
 										$entry = $parser->parse($line);
 
-										$request = explode(' ', $line['request']);
+										$request = explode(' ', $entry->request);
 										$date = Carbon::now();
-										$extraBody = [];
-										try {
-											//1. GET GEO IP location
-											$record = $reader->city($entry->client);
-
-											$location = [
-												'country' => [
-													'code' => $record->country->isoCode,
-													'name' => $record->country->name,
-												],
-												'city' => $record->city->name,
-												'postal' => $record->postal->code,
-												'max_subdivision' => [
-													'code' => $record->mostSpecificSubdivision->isoCode,
-													'name' => $record->mostSpecificSubdivision->name
-												],
-												'location' => "{$record->location->latitude}, {$record->location->longitude}",
-												'latitude' => $record->location->latitude,
-												'longitude' => $record->location->longitude
-											];
-											$extraBody['location'] = $location;
-										} catch (\InvalidArgumentException $e) {
-											$output->writeln("<error>[ERR] - ERROR while parse ip data : {$e->getMessage()} - {$e->getCode()}</error>");
-										}
-
 										$body = [
 											'created_at' => $date->toAtomString(),
 											'time_local' => $entry->date,
 											'level' => $entry->type,
 											'message' => $entry->message,
 											'virtual_host' => $entry->server,
-											'request' => $entry->host,
+											'request' => $entry->request,
 											'url' => $request[1],
 											'method' => $request[0],
 											'http_version' => $request[2],
 											'remote_addr' => $entry->client,
 										];
-										$body = array_merge($body, $extraBody);
 										break;
 								}
 
