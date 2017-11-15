@@ -184,23 +184,28 @@ class RunCommand extends Command
 										break;
 
 									case 'nginx-error':
-										$parser = new \TM\ErrorLogParser\Parser(\TM\ErrorLogParser\Parser::TYPE_NGINX); // or TYPE_NGINX;
-										$entry = $parser->parse($line);
+										try {
+											$parser = new \TM\ErrorLogParser\Parser(\TM\ErrorLogParser\Parser::TYPE_NGINX); // or TYPE_NGINX;
+											$entry = $parser->parse($line);
 
-										$request = explode(' ', $entry->request);
-										$date = Carbon::now();
-										$body = [
-											'created_at' => $date->toAtomString(),
-											'time_local' => $entry->date,
-											'level' => $entry->type,
-											'message' => $entry->message,
-											'virtual_host' => $entry->server,
-											'request' => $entry->request,
-											'url' => $request[1],
-											'method' => $request[0],
-											'http_version' => $request[2],
-											'remote_addr' => $entry->client,
-										];
+											$request = explode(' ', $entry->request);
+											$date = Carbon::now();
+											$body = [
+												'created_at' => $date->toAtomString(),
+												'time_local' => $entry->date,
+												'level' => $entry->type,
+												'message' => $entry->message,
+												'virtual_host' => $entry->server,
+												'request' => $entry->request,
+												'url' => $request[1],
+												'method' => $request[0],
+												'http_version' => $request[2],
+												'remote_addr' => $entry->client,
+											];
+										}catch (\TM\ErrorLogParser\Exception\FormatException $e){
+											$output->writeln("<error>[ERR] - ERROR while parse nginx error data : {$e->getMessage()} - {$e->getCode()}</error>")
+										}
+
 										break;
 								}
 
