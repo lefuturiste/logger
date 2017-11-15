@@ -203,7 +203,7 @@ class RunCommand extends Command
 												'remote_addr' => $entry->client,
 											];
 										}catch (\TM\ErrorLogParser\Exception\FormatException $e){
-											$output->writeln("<error>[ERR] - ERROR while parse nginx error data : {$e->getMessage()} - {$e->getCode()}</error>")
+											$output->writeln("<error>[ERR] - ERROR while parse nginx error data : {$e->getMessage()} - {$e->getCode()}</error>");
 										}
 
 										break;
