@@ -142,6 +142,12 @@ class RunCommand extends Command
 												$agent['os']['version']['value'] = $version;
 											}
 										}
+										// http_user_agent.browser.family.version type conflict
+										if (isset($agent['browser']['family']['version'])){
+											if (is_int($agent['browser']['family']['version'])){
+												$agent['browser']['family']['version'] = (string)"{$agent['browser']['family']['version']}";
+											}
+										}
 
 										//3. GET Request information
 										$request = explode(' ', $line['request']);
