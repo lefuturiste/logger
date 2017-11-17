@@ -63,6 +63,7 @@ class RunCommand extends Command
 			$lineCountTemp[$file['id']] = 0;
 			$hashTemp[$file['id']] = NULL;
 		}
+		$runTime = 0;
 		while (true) {
 			foreach ($files AS $file) {
 				//on hash le fichier
@@ -240,6 +241,12 @@ class RunCommand extends Command
 					$hashTemp[$file['id']] = $hash;
 				}
 			}
+			if ($runTime == getenv('RUN_TIME')) {
+				$output->writeln("<error>RESTARTING</error>");
+				shell_exec(getenv('RUN_COMMAND'));
+				exit();
+			}
+			$runTime++;
 			sleep(2);
 		}
 	}

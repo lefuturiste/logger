@@ -1,4 +1,6 @@
 <?php
+use Elasticsearch\ClientBuilder;
+
 require '../vendor/autoload.php';
 
 $builder = ClientBuilder::create();
