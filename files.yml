@@ -1,6 +1,6 @@
-- path: ./somefile.txt
+- path: /var/log/nginx/access-json.log
   type: nginx-access
-  id: hqs
-- path: ./error.txt
+  id: nginxaccess
+- path: /var/log/nginx/error.log
   type: nginx-error
-  id: qjdsjsdq
+  id: nginxerror

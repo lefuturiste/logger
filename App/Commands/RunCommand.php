@@ -30,6 +30,9 @@ class RunCommand extends Command
 	{
 		$output->writeln('Running application...');
 
+		$loggerName = getenv('LOGGER_NAME');
+  		$output->writeln("- [X] Starting '{$loggerName}' application");
+
 		//reader
 		$geoLitePath = getenv('GEOLITE_PATH');
 		$reader = new Reader(
@@ -41,8 +44,16 @@ class RunCommand extends Command
 		//reader
 		$builder = ClientBuilder::create();
 
-		$builder->setHosts(
-			[getenv('ELASTICSEARCH_HOST')]
+                $builder->setHosts(
+			[
+				[
+					'host' => getenv('ELASTICSEARCH_HOST'),
+					'port' => getenv('ELASTICSEARCH_PORT'),
+				        'scheme' => getenv('ELASTICSEARCH_SCHEME'),
+				        'user' => getenv('ELASTICSEARCH_USERNAME'),
+       					'pass' => getenv('ELASTICSEARCH_PASSWORD')
+				]
+			]
 		);
 
 		$indexName = getenv('ELATICSEARCH_INDEX_NAME');
@@ -167,6 +178,7 @@ class RunCommand extends Command
 
 										$date = Carbon::now();
 										$body = [
+											'logger' => $loggerName,
 											'created_at' => $date->toAtomString(),
 											'virtual_host' => $line['virtual_host'],
 											'url' => $request[1],
@@ -198,6 +210,7 @@ class RunCommand extends Command
 											$request = explode(' ', $entry->request);
 											$date = Carbon::now();
 											$body = [
+												'logger' => $loggerName,
 												'created_at' => $date->toAtomString(),
 												'time_local' => $entry->date,
 												'level' => $entry->type,
