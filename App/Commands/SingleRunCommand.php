@@ -42,8 +42,18 @@ class SingleRunCommand extends Command
 		//reader
 		$builder = ClientBuilder::create();
 
+		$builder = ClientBuilder::create();
+
 		$builder->setHosts(
-			[getenv('ELASTICSEARCH_HOST')]
+			[
+				[
+					'host' => getenv('ELASTICSEARCH_HOST'),
+					'port' => getenv('ELASTICSEARCH_PORT'),
+					'scheme' => getenv('ELASTICSEARCH_SCHEME'),
+					'user' => getenv('ELASTICSEARCH_USERNAME'),
+					'pass' => getenv('ELASTICSEARCH_PASSWORD')
+				]
+			]
 		);
 
 		$indexName = getenv('ELATICSEARCH_INDEX_NAME');
