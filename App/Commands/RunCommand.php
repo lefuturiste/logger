@@ -107,9 +107,16 @@ class RunCommand extends Command
 										//decode
 										$line = json_decode($line, 1);
 										$extraBody = [];
+
+										if ($line['http_x_forwarded_for'] != '-') {
+											$ip = $line['http_x_forwarded_for'];
+										}else {
+											$ip = $line['remote_addr'];
+										}
+
 										try {
 											//1. GET GEO IP location
-											$record = $reader->city($line['http_x_forwarded_for']);
+											$record = $reader->city($ip);
 
 											$location = [
 												'country' => [

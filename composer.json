@@ -8,7 +8,8 @@
         "elasticsearch/elasticsearch": "^5.3",
         "nesbot/carbon": "^1.22",
         "symfony/yaml": "^3.3",
-        "tm/error-log-parser": "^1.2"
+        "tm/error-log-parser": "^1.2",
+        "predis/predis": "^1.1"
     },
     "autoload": {
         "psr-4": {
