@@ -29,6 +29,7 @@ class SingleRunCommand extends Command
 
 	protected function execute(InputInterface $input, OutputInterface $output)
 	{
+		$loggerName = getenv('LOGGER_NAME');
 		$output->writeln('Running single instance of application...');
 
 		//reader
@@ -196,6 +197,7 @@ class SingleRunCommand extends Command
 
 									$date = Carbon::now();
 									$body = [
+										'logger' => $loggerName,
 										'created_at' => $date->toAtomString(),
 										'virtual_host' => $line['virtual_host'],
 										'url' => $request[1],
@@ -227,6 +229,7 @@ class SingleRunCommand extends Command
 										$request = explode(' ', $entry->request);
 										$date = Carbon::now();
 										$body = [
+											'logger' => $loggerName,
 											'created_at' => $date->toAtomString(),
 											'time_local' => $entry->date,
 											'level' => $entry->type,
