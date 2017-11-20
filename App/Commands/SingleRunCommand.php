@@ -195,14 +195,26 @@ class SingleRunCommand extends Command
 									$charset = str_replace(' ', '', $charset);
 									$contentType = str_replace(' ', '', $contentType);
 
-									$date = Carbon::now();
+									$date = new \Carbon\Carbon($line['time_local']);
+
+									try {
+										$date = new \Carbon\Carbon($line['time_local']);
+									} catch (Exception $e) {
+										$output->writeln("<error>[ERR] - ERROR while parse time_local data : {$e->getMessage()} </error>");
+
+										$date = \Carbon\Carbon::now();
+									}
+									$now = \Carbon\Carbon::now();
+
 									$body = [
 										'logger' => $loggerName,
 										'created_at' => $date->toAtomString(),
+										'register_at' => $now->toAtomString(),
 										'virtual_host' => $line['virtual_host'],
 										'url' => $request[1],
 										'method' => $request[0],
 										'http_version' => $request[2],
+										'real_ip' => $ip,
 										'http_x_forwarded_for' => $line['http_x_forwarded_for'],
 										'http_user_agent_raw' => $line['http_user_agent'],
 										'remote_addr' => $line['remote_addr'],
