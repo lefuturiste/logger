@@ -66,7 +66,12 @@ class SingleRunCommand extends Command
 		$redis = new Client([
 			'scheme' => 'tcp',
 			'host'   => getenv('REDIS_HOST'),
-			'port'   => getenv('REDIS_PORT'),
+			'port'   => getenv('REDIS_PORT')
+		],[
+			'parameters' => [
+				'password' => getenv('REDIS_PASSWORD'),
+				'database' => 10,
+			],
 		]);
 
 		$output->writeln('- [X] Connected to redis server');
@@ -75,7 +80,7 @@ class SingleRunCommand extends Command
 
 		$files = Yaml::parse(file_get_contents('./files.yml'));
 
-		if ($redis->get('logger_singleRun_lineCountTemp') == NULL && $redis->get('logger_singleRun_hashTemp') == NULL){
+		if ($redis->get('logger_singleRun_lineCountTemp_' . $loggerName) == NULL && $redis->get('logger_singleRun_hashTemp_' . $loggerName) == NULL){
 			//get redis vars
 			$lineCountTemp = [];
 			//get redis vars
@@ -86,8 +91,8 @@ class SingleRunCommand extends Command
 				$hashTemp[$file['id']] = NULL;
 			}
 		}else{
-			$lineCountTemp = json_decode($redis->get('logger_singleRun_lineCountTemp'), 1);
-			$hashTemp = json_decode($redis->get('logger_singleRun_hashTemp'), 1);
+			$lineCountTemp = json_decode($redis->get('logger_singleRun_lineCountTemp_' . $loggerName), 1);
+			$hashTemp = json_decode($redis->get('logger_singleRun_hashTemp_' . $loggerName), 1);
 		}
 
 		foreach ($files AS $file) {
@@ -286,7 +291,7 @@ class SingleRunCommand extends Command
 				$hashTemp[$file['id']] = $hash;
 			}
 		}
-		$redis->set('logger_singleRun_lineCountTemp', json_encode($lineCountTemp, 1));
-		$redis->set('logger_singleRun_hashTemp', json_encode($hashTemp, 1));
+		$redis->set('logger_singleRun_lineCountTemp_' . $loggerName, json_encode($lineCountTemp, 1));
+		$redis->set('logger_singleRun_hashTemp_' . $loggerName, json_encode($hashTemp, 1));
 	}
 }
