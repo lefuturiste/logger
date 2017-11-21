@@ -63,16 +63,22 @@ class SingleRunCommand extends Command
 
 		$output->writeln('- [X] Connected to elasticsearch server');
 
+		if (getenv('REDIS_PASSWORD') != NULL) {
+			$redisOption = [
+				'parameters' => [
+					'password' => getenv('REDIS_PASSWORD'),
+					'database' => 10,
+				],
+			];
+		} else {
+			$redisOption = [];
+		}
+
 		$redis = new Client([
 			'scheme' => 'tcp',
-			'host'   => getenv('REDIS_HOST'),
-			'port'   => getenv('REDIS_PORT')
-		],[
-			'parameters' => [
-				'password' => getenv('REDIS_PASSWORD'),
-				'database' => 10,
-			],
-		]);
+			'host' => getenv('REDIS_HOST'),
+			'port' => getenv('REDIS_PORT')
+		], $redisOption);
 
 		$output->writeln('- [X] Connected to redis server');
 
@@ -80,7 +86,7 @@ class SingleRunCommand extends Command
 
 		$files = Yaml::parse(file_get_contents('./files.yml'));
 
-		if ($redis->get('logger_singleRun_lineCountTemp_' . $loggerName) == NULL && $redis->get('logger_singleRun_hashTemp_' . $loggerName) == NULL){
+		if ($redis->get('logger_singleRun_lineCountTemp_' . $loggerName) == NULL && $redis->get('logger_singleRun_hashTemp_' . $loggerName) == NULL) {
 			//get redis vars
 			$lineCountTemp = [];
 			//get redis vars
@@ -90,7 +96,7 @@ class SingleRunCommand extends Command
 				$lineCountTemp[$file['id']] = 0;
 				$hashTemp[$file['id']] = NULL;
 			}
-		}else{
+		} else {
 			$lineCountTemp = json_decode($redis->get('logger_singleRun_lineCountTemp_' . $loggerName), 1);
 			$hashTemp = json_decode($redis->get('logger_singleRun_hashTemp_' . $loggerName), 1);
 		}
@@ -106,7 +112,7 @@ class SingleRunCommand extends Command
 			if ($hashTemp[$file['id']] != NULL) {
 				if ($hash == $hashTemp[$file['id']] AND $count = $lineCountTemp[$file['id']]) {
 					//aucun nouveau contenu
-						$output->writeln("- [X] NONE New content found on {$file['path']} (0 new(s) lines)");
+					$output->writeln("- [X] NONE New content found on {$file['path']} (0 new(s) lines)");
 				} else {
 					//nouveau contenu detecté
 					//on filtre les donnés et on les stores
@@ -138,7 +144,7 @@ class SingleRunCommand extends Command
 
 									if ($line['http_x_forwarded_for'] != '-') {
 										$ip = $line['http_x_forwarded_for'];
-									}else {
+									} else {
 										$ip = $line['remote_addr'];
 									}
 
@@ -244,10 +250,23 @@ class SingleRunCommand extends Command
 										$entry = $parser->parse($line);
 
 										$request = explode(' ', $entry->request);
+
 										$date = Carbon::now();
+
+										try {
+											$date = new \Carbon\Carbon($entry->date);
+										} catch (Exception $e) {
+											$output->writeln("<error>[ERR] - ERROR while parse time_local data : {$e->getMessage()} </error>");
+
+											$date = \Carbon\Carbon::now();
+										}
+										$now = \Carbon\Carbon::now();
+
 										$body = [
 											'logger' => $loggerName,
 											'created_at' => $date->toAtomString(),
+											'register_at' => $now->toAtomString(),
+											'raw_message' => $line,
 											'time_local' => $entry->date,
 											'level' => $entry->type,
 											'message' => $entry->message,
@@ -258,8 +277,18 @@ class SingleRunCommand extends Command
 											'http_version' => $request[2],
 											'remote_addr' => $entry->client,
 										];
+
 									} catch (\TM\ErrorLogParser\Exception\FormatException $e) {
 										$output->writeln("<error>[ERR] - ERROR while parse nginx error data : {$e->getMessage()} - {$e->getCode()}</error>");
+
+										$now = \Carbon\Carbon::now();
+
+										$body = [
+											'logger' => $loggerName,
+											'created_at' => $now->toAtomString(),
+											'register_at' => $now->toAtomString(),
+											'raw_message' => $line
+										];
 									}
 
 									break;
