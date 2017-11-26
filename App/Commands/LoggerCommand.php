@@ -10,9 +10,11 @@ use App\Logger\Parser\NginxAccessLineParser;
 use App\Logger\Parser\NginxErrorLineParser;
 use DI\ContainerBuilder;
 use App\Logger\Parser\LineParser;
+use function DI\get;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Yaml\Yaml;
 
 class LoggerCommand extends Command
 {
@@ -31,29 +33,35 @@ class LoggerCommand extends Command
 		$container = $builder->build();
 
 		$redis = new RedisConnector([
-			'host' => 'localhost',
-			'port' => 6379
+			'host' => getenv('REDIS_HOST'),
+			'port' => getenv('REDIS_PORT'),
 		]);
 		$container->set(RedisConnector::class, $redis);
 		$elasticsearch = new ElasticsearchConnector([
-			'host' => 'elasticsearch.stan-tab.fr',
-			'port' => 443,
-			'scheme' => 'https',
-			'username' => 'logger',
-			'password' => "KQSKSAAADSK23299392"
+			'host' => getenv('ELASTICSEARCH_HOST'),
+			'port' => getenv('ELASTICSEARCH_PORT'),
+			'scheme' => getenv('ELASTICSEARCH_SCHEME'),
+			'username' => getenv('ELASTICSEARCH_USERNAME'),
+			'password' => getenv('ELASTICSEARCH_PASSWORD')
 		]);
 		$container->set(ElasticsearchConnector::class, $elasticsearch);
 		$logger = new App([
-			'name' => 'name',
-			'geoIpCityPath' => '.\GeoLite2-City.mmdb'
+			'name' => getenv('LOGGER_NAME'),
+			'geoIpCityPath' => getenv('GEOLITE_PATH')
 		]);
 		$container->set(App::class, $logger);
 		$logger->setRedisConnector($container->get(RedisConnector::class));
 		$logger->setElasticsearchConnector($container->get(ElasticsearchConnector::class));
-		$logger->setFilesInput([
-			FileInputFactory::create($redis, $logger, '.\someerror.txt', NginxErrorLineParser::TYPE),
-			FileInputFactory::create($redis, $logger, '.\some.txt', NginxAccessLineParser::TYPE)
-		]);
+
+		if (getenv('FILES_CONFIG_PATH') != NULL) {
+			$files = Yaml::parse(file_get_contents(getenv('FILES_CONFIG_PATH')));
+
+			$filesInput = [];
+			foreach ($files as $file) {
+				array_push($filesInput, FileInputFactory::create($redis, $logger, $file['path'], $file['type']));
+			}
+		}
+		$logger->setFilesInput($filesInput);
 
 		$output->write("\n - Scanning...");
 		foreach ($logger->getFilesInput() as $file) {
@@ -77,7 +85,6 @@ class LoggerCommand extends Command
 						];
 						try {
 							$response = $elasticsearch->client->index($params);
-							var_dump($response);
 							$output->writeln("\n - [X] Send data to elasticseach");
 						} catch (BadRequest400Exception $e) {
 							$output->writeln("<error>[ERR] - ERROR while send data to elasticseach : {$e->getMessage()} - {$e->getCode()}</error>");

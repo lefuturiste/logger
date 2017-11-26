@@ -54,7 +54,8 @@ class FileInput
 		return $this;
 	}
 
-	public function persist(){
+	public function persist()
+	{
 		$hashTemp[$this->id] = $this->getHash();
 		$this->redisConnector->set("logger_singleRun_hashTemp_{$this->logger->config['name']}", $hashTemp);
 		$lineCountTemp[$this->id] = $this->getCountLines($this->getLines());
@@ -68,12 +69,24 @@ class FileInput
 
 	public function getLastHash()
 	{
-		return $this->redisConnector->get("logger_singleRun_hashTemp_{$this->logger->config['name']}")[$this->id];
+		if (isset($this->redisConnector->get("logger_singleRun_hashTemp_{$this->logger->config['name']}")[$this->id])) {
+			return $this->redisConnector->get("logger_singleRun_hashTemp_{$this->logger->config['name']}")[$this->id];
+		} else {
+			$this->persist();
+
+			return $this->getHash();
+		}
 	}
 
 	public function getLastLineCount()
 	{
-		return $this->redisConnector->get("logger_singleRun_lineCountTemp_{$this->logger->config['name']}")[$this->id];
+		if (isset($this->redisConnector->get("logger_singleRun_lineCountTemp_{$this->logger->config['name']}")[$this->id])) {
+			return $this->redisConnector->get("logger_singleRun_lineCountTemp_{$this->logger->config['name']}")[$this->id];
+		} else {
+			$this->persist();
+
+			return $this->getCountLines($this->getLines());
+		}
 	}
 
 
@@ -133,7 +146,7 @@ class FileInput
 			$this->newLineCount = $newLinesCount;
 
 			return $newLines;
-		}else{
+		} else {
 			false;
 		}
 	}
