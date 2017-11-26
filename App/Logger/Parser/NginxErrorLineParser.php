@@ -19,7 +19,7 @@ class NginxErrorLineParser extends LineParser
 	public function getLocalDate()
 	{
 		try {
-			return new \Carbon\Carbon($this->entry->date);
+			return new \Carbon\Carbon($this->entry['date']);
 		} catch (Exception $e) {
 			printf("\n <error>[ERR] - ERROR while parse time_local data : {$e->getMessage()} </error>");
 
@@ -29,44 +29,60 @@ class NginxErrorLineParser extends LineParser
 
 	public function toArray()
 	{
-		return [
-			'created_at' => $this->getLocalDate(),
+		$body = [
+			'created_at' => $this->getLocalDate()->toAtomString(),
 			'register_at' => Carbon::now()->toAtomString(),
 			'raw_message' => $this->line,
-			'time_local' => $this->entry->date,
-			'level' => $this->entry->type,
-			'message' => $this->entry->message,
 			'virtual_host' => $this->getVirtualHost(),
-			'request' => $this->entry->request,
 			'url' => $this->getUrl(),
 			'method' => $this->getMethod(),
-			'http_version' => $this->getHttpVersion(),
-			'remote_addr' => $this->entry->client,
+			'http_version' => $this->getHttpVersion()
 		];
+		return array_merge($body, $this->entry);
 	}
 
 	public function getVirtualHost()
 	{
-		return str_replace('www.', '', $this->entry->server);
+		if (isset($this->entry['server'])) {
+			return str_replace('www.', '', $this->entry['server']);
+		}
+		return false;
 	}
 
 	public function parse(){
-		$parser = new \TM\ErrorLogParser\Parser(\TM\ErrorLogParser\Parser::TYPE_NGINX); // or TYPE_NGINX;
-		return $parser->parse($this->line);
+		var_dump($this->line);
+		try {
+			$parser = new \TM\ErrorLogParser\Parser(\TM\ErrorLogParser\Parser::TYPE_NGINX);
+			$entry = $parser->parse($this->line);
+			return (array) $entry;
+		} catch (\TM\ErrorLogParser\Exception\FormatException $e) {
+			printf("\n <error>[ERR] - ERROR while parse error nginx data : {$e->getMessage()} </error>");
+
+			return [];
+		}
 	}
 
 	public function getUrl()
 	{
-		return explode(' ', $this->entry->request)[1];
+		if (isset($this->entry['request'])) {
+			return explode(' ', $this->entry['request'])[1];
+		}
+		return false;
 	}
 
 	public function getMethod()
 	{
-		return explode(' ', $this->entry->request)[0];
+		if (isset($this->entry['request'])) {
+			return explode(' ', $this->entry['request'])[0];
+		}
+		return false;
 	}
 
 	public function getHttpVersion()
 	{
-		return explode(' ', $this->entry->request)[2];
+		if (isset($this->entry['request'])) {
+			return explode(' ', $this->entry['request'])[2];
+		}
+		return false;
 	}
 }

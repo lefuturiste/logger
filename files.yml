@@ -1,6 +1,0 @@
-- path: /var/log/nginx/access-json.log
-  type: nginx-access
-  id: nginxaccess
-- path: /var/log/nginx/error.log
-  type: nginx-error
-  id: nginxerror
