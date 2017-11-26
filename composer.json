@@ -9,7 +9,10 @@
         "nesbot/carbon": "^1.22",
         "symfony/yaml": "^3.3",
         "tm/error-log-parser": "^1.2",
-        "predis/predis": "^1.1"
+        "predis/predis": "^1.1",
+        "lefuturiste/validator": "^1.0",
+        "php-di/php-di": "^5.4",
+        "guzzlehttp/guzzle": "^6.3"
     },
     "autoload": {
         "psr-4": {
