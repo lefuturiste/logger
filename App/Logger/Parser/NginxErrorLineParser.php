@@ -27,6 +27,20 @@ class NginxErrorLineParser extends LineParser
 		}
 	}
 
+	public function getRemoteAddr(){
+		if (isset($this->entry['client'])) {
+			return $this->entry['client'];
+		}
+		return false;
+	}
+
+	public function getRemoteAddr(){
+		if (isset($this->entry['type'])) {
+			return $this->entry['type'];
+		}
+		return false;
+	}
+
 	public function toArray()
 	{
 		$body = [
@@ -36,16 +50,11 @@ class NginxErrorLineParser extends LineParser
 			'virtual_host' => $this->getVirtualHost(),
 			'url' => $this->getUrl(),
 			'method' => $this->getMethod(),
-			'http_version' => $this->getHttpVersion()
+			'http_version' => $this->getHttpVersion(),
+			'remote_addr' => $this->getRemoteAddr(),
+			'level' => $this->getLevel()
 		];
-		return array_merge($body, $this->entry);
-	}
-
-	public function getFormatedEntry()
-	{
-		if ($this->entry) {
-			# code...
-		}
+		return $body;
 	}
 
 	public function getVirtualHost()
