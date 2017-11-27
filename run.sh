@@ -1,5 +1,5 @@
 while true
 do
-    sudo php /path/to/application.php app:logger
+    sudo php /opt/logger/application.php app:logger
     sleep 2
 done

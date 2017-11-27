@@ -35,6 +35,9 @@ class LoggerCommand extends Command
 		$redis = new RedisConnector([
 			'host' => getenv('REDIS_HOST'),
 			'port' => getenv('REDIS_PORT'),
+			'password' => getenv('REDIS_PASSWORD')
+
+
 		]);
 		$container->set(RedisConnector::class, $redis);
 		$elasticsearch = new ElasticsearchConnector([
