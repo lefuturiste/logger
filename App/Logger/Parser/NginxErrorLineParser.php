@@ -41,6 +41,13 @@ class NginxErrorLineParser extends LineParser
 		return array_merge($body, $this->entry);
 	}
 
+	public function getFormatedEntry()
+	{
+		if ($this->entry) {
+			# code...
+		}
+	}
+
 	public function getVirtualHost()
 	{
 		if (isset($this->entry['server'])) {
@@ -50,7 +57,6 @@ class NginxErrorLineParser extends LineParser
 	}
 
 	public function parse(){
-		var_dump($this->line);
 		try {
 			$parser = new \TM\ErrorLogParser\Parser(\TM\ErrorLogParser\Parser::TYPE_NGINX);
 			$entry = $parser->parse($this->line);
