@@ -80,21 +80,22 @@ class LoggerCommand extends Command
 					$indexName = 'logger';
 					$date = \Carbon\Carbon::now();
 					$body = $parser->toArray();
-					if (isset($body)) {
-						$params = [
-							'index' => "{$indexName}-{$date->year}.{$date->month}.{$date->day}",
-							'type' => $file->type,
-							'body' => $body
-						];
-						try {
-							$response = $elasticsearch->client->index($params);
-							$output->writeln("\n - [X] Send data to elasticseach");
-						} catch (BadRequest400Exception $e) {
-							$output->writeln("<error>[ERR] - ERROR while send data to elasticseach : {$e->getMessage()} - {$e->getCode()}</error>");
-						}
-					} else {
-						$output->writeln("- [X] None data to elasticseach");
-					}
+					var_dump($body);
+//					if (isset($body)) {
+//						$params = [
+//							'index' => "{$indexName}-{$date->year}.{$date->month}.{$date->day}",
+//							'type' => $file->type,
+//							'body' => $body
+//						];
+//						try {
+//							$response = $elasticsearch->client->index($params);
+//							$output->writeln("\n - [X] Send data to elasticseach");
+//						} catch (BadRequest400Exception $e) {
+//							$output->writeln("<error>[ERR] - ERROR while send data to elasticseach : {$e->getMessage()} - {$e->getCode()}</error>");
+//						}
+//					} else {
+//						$output->writeln("- [X] None data to elasticseach");
+//					}
 				}
 
 				$file->persist();

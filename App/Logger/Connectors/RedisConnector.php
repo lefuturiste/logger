@@ -41,7 +41,7 @@ class RedisConnector
 			'port' => $this->config['port'],
 		];
 		$options = [];
-		if (isset($this->config['password'])) {
+		if (isset($this->config['password']) && $this->config['password'] != 'false') {
 			$options = [
 				'parameters' => [
 					'password' => $this->config['password'],

@@ -34,7 +34,7 @@ class NginxErrorLineParser extends LineParser
 		return false;
 	}
 
-	public function getRemoteAddr(){
+	public function getLevel(){
 		if (isset($this->entry['type'])) {
 			return $this->entry['type'];
 		}
@@ -43,7 +43,7 @@ class NginxErrorLineParser extends LineParser
 
 	public function toArray()
 	{
-		$body = [
+		return [
 			'created_at' => $this->getLocalDate()->toAtomString(),
 			'register_at' => Carbon::now()->toAtomString(),
 			'raw_message' => $this->line,
@@ -54,7 +54,6 @@ class NginxErrorLineParser extends LineParser
 			'remote_addr' => $this->getRemoteAddr(),
 			'level' => $this->getLevel()
 		];
-		return $body;
 	}
 
 	public function getVirtualHost()

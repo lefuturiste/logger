@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use GeoIp2\Database\Reader;
 use GuzzleHttp\Client;
 use WhichBrowser\Parser;
+use Whois;
 
 class NginxAccessLineParser extends LineParser
 {
@@ -62,38 +63,9 @@ class NginxAccessLineParser extends LineParser
 		}
 	}
 
-	public function getClientISP($ip)
+	public function getClientHostName()
 	{
-		$ipDetails = $this->getIpDetails($ip);
-		if (isset($ipDetails['org'])){
-			return $ipDetails['org'];
-		}else{
-			return false;
-		}
-	}
-
-	public function getClientHostName($ip)
-	{
-		$ipDetails = $this->getIpDetails($ip);
-		if (isset($ipDetails['hostname'])){
-			return $ipDetails['hostname'];
-		}else{
-			return false;
-		}
-	}
-
-	public function getIpDetails($ip)
-	{
-		try {
-			$httpClient = new Client();
-			$ipInfoRequest = $httpClient->request('GET', "https://ipinfo.io/{$ip}/json");
-			$json = \GuzzleHttp\json_decode($ipInfoRequest->getBody(), 1);
-		}catch (\Exception $e){
-			printf("\n <error>[ERR] - ERROR while parse http client isp data : {$e->getMessage()} </error>");
-			$json = false;
-		}
-
-		return $json;
+		return gethostbyaddr($this->getClientIp());
 	}
 
 	public function getUserAgent()
@@ -208,7 +180,6 @@ class NginxAccessLineParser extends LineParser
 			'status' => $this->line['status'],
 			'remote_user' => $this->line['remote_user'],
 			'location' => $this->getClientLocation(),
-			'isp' => $this->getClientISP($this->getClientIp()),
 			'client_hostname' => $this->getClientHostName($this->getClientIp()),
 			'http_user_agent' => $this->getUserAgent()
 		];
