@@ -18,26 +18,34 @@ class NginxErrorLineParser extends LineParser
 
 	public function getLocalDate()
 	{
-		try {
-			return new \Carbon\Carbon($this->entry['date']);
-		} catch (Exception $e) {
-			printf("\n <error>[ERR] - ERROR while parse time_local data : {$e->getMessage()} </error>");
+		if (isset($this->entry['date'])) {
+			try {
+				return new \Carbon\Carbon($this->entry['date']);
+			} catch (Exception $e) {
+				printf("\n <error>[ERR] - ERROR while parse time_local data : {$e->getMessage()} </error>");
 
+				return \Carbon\Carbon::now();
+			}
+		} else {
 			return \Carbon\Carbon::now();
 		}
 	}
 
-	public function getRemoteAddr(){
+	public function getRemoteAddr()
+	{
 		if (isset($this->entry['client'])) {
 			return $this->entry['client'];
 		}
+
 		return false;
 	}
 
-	public function getLevel(){
+	public function getLevel()
+	{
 		if (isset($this->entry['type'])) {
 			return $this->entry['type'];
 		}
+
 		return false;
 	}
 
@@ -61,14 +69,17 @@ class NginxErrorLineParser extends LineParser
 		if (isset($this->entry['server'])) {
 			return str_replace('www.', '', $this->entry['server']);
 		}
+
 		return false;
 	}
 
-	public function parse(){
+	public function parse()
+	{
 		try {
 			$parser = new \TM\ErrorLogParser\Parser(\TM\ErrorLogParser\Parser::TYPE_NGINX);
 			$entry = $parser->parse($this->line);
-			return (array) $entry;
+
+			return (array)$entry;
 		} catch (\TM\ErrorLogParser\Exception\FormatException $e) {
 			printf("\n <error>[ERR] - ERROR while parse error nginx data : {$e->getMessage()} </error>");
 
@@ -81,6 +92,7 @@ class NginxErrorLineParser extends LineParser
 		if (isset($this->entry['request'])) {
 			return explode(' ', $this->entry['request'])[1];
 		}
+
 		return false;
 	}
 
@@ -89,6 +101,7 @@ class NginxErrorLineParser extends LineParser
 		if (isset($this->entry['request'])) {
 			return explode(' ', $this->entry['request'])[0];
 		}
+
 		return false;
 	}
 
@@ -97,6 +110,7 @@ class NginxErrorLineParser extends LineParser
 		if (isset($this->entry['request'])) {
 			return explode(' ', $this->entry['request'])[2];
 		}
+
 		return false;
 	}
 }
