@@ -2,6 +2,7 @@
 
 namespace App\Commands;
 
+use App\Logger\LineAnalyser;
 use App\Logger\App;
 use App\Logger\Connectors\ElasticsearchConnector;
 use App\Logger\Connectors\RedisConnector;
@@ -29,6 +30,8 @@ class LoggerCommand extends Command
 
 	protected function execute(InputInterface $input, OutputInterface $output)
 	{
+		$output->write("\n - Start of app \n");
+
 		$builder = new ContainerBuilder();
 		$container = $builder->build();
 
@@ -36,8 +39,6 @@ class LoggerCommand extends Command
 			'host' => getenv('REDIS_HOST'),
 			'port' => getenv('REDIS_PORT'),
 			'password' => getenv('REDIS_PASSWORD')
-
-
 		]);
 		$container->set(RedisConnector::class, $redis);
 		$elasticsearch = new ElasticsearchConnector([
@@ -87,8 +88,11 @@ class LoggerCommand extends Command
 							'body' => $body
 						];
 						try {
-							$response = $elasticsearch->client->index($params);
+//							$response = $elasticsearch->client->index($params);
 							$output->writeln("\n - [X] Send data to elasticseach");
+							$analyser = new \App\Logger\Analyser\LineAnalyser($parser);
+							$analyser->setDiscordWhUrl(getenv('DISCORD_WH'));
+							$analyser->run();
 						} catch (BadRequest400Exception $e) {
 							$output->writeln("<error>[ERR] - ERROR while send data to elasticseach : {$e->getMessage()} - {$e->getCode()}</error>");
 						}
@@ -97,7 +101,7 @@ class LoggerCommand extends Command
 					}
 				}
 
-				$file->persist();
+//				$file->persist();
 			} else {
 				echo "\n - NONE content found in {$file->path}";
 			}

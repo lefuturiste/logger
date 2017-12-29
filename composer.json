@@ -14,7 +14,8 @@
         "php-di/php-di": "^5.4",
         "guzzlehttp/guzzle": "^6.3",
         "phois/whois": "dev-master",
-        "phpwhois/phpwhois": "^4.2"
+        "phpwhois/phpwhois": "^4.2",
+        "nopjmp/discord-webhooks": "^0.2.2"
     },
     "autoload": {
         "psr-4": {

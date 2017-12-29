@@ -29,6 +29,12 @@ class SingleRunCommand extends Command
 
 	protected function execute(InputInterface $input, OutputInterface $output)
 	{
+		$output->write("WARNING : THIS COMMAND IS DECAPRITED USE app:logger command instead \n");
+		$output->write("WARNING : THIS COMMAND IS DECAPRITED USE app:logger command instead \n");
+		$output->write("WARNING : THIS COMMAND IS DECAPRITED USE app:logger command instead \n");
+		$output->write("WARNING : THIS COMMAND IS DECAPRITED USE app:logger command instead \n");
+		$output->write("WARNING : THIS COMMAND IS DECAPRITED USE app:logger command instead \n");
+		$output->write("WARNING : THIS COMMAND IS DECAPRITED USE app:logger command instead \n");
 		$loggerName = getenv('LOGGER_NAME');
 		$output->writeln('Running single instance of application...');
 
