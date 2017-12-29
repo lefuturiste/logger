@@ -88,8 +88,9 @@ class LoggerCommand extends Command
 							'body' => $body
 						];
 						try {
-//							$response = $elasticsearch->client->index($params);
+							$response = $elasticsearch->client->index($params);
 							$output->writeln("\n - [X] Send data to elasticseach");
+
 							$analyser = new \App\Logger\Analyser\LineAnalyser($parser);
 							$analyser->setDiscordWhUrl(getenv('DISCORD_WH'));
 							$analyser->run();
@@ -101,7 +102,7 @@ class LoggerCommand extends Command
 					}
 				}
 
-//				$file->persist();
+				$file->persist();
 			} else {
 				echo "\n - NONE content found in {$file->path}";
 			}
