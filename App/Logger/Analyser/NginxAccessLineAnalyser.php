@@ -35,7 +35,8 @@ class NginxAccessLineAnalyser
 	{
 		$body = $this->parser->toArray();
 		if (isset($body['status'])) {
-			switch ($body['status']) {
+			$status = (int)$body['status'];
+			switch ($status) {
 				case 500:
 					//send discord log
 					$client = new Client($this->analyser->getDiscordWhUrl());
