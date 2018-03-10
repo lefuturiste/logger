@@ -9,6 +9,7 @@ use App\Logger\Connectors\RedisConnector;
 use App\Logger\Input\FileInputFactory;
 use App\Logger\Parser\NginxAccessLineParser;
 use App\Logger\Parser\NginxErrorLineParser;
+use Carbon\Carbon;
 use DI\ContainerBuilder;
 use App\Logger\Parser\LineParser;
 use function DI\get;
@@ -78,14 +79,15 @@ class LoggerCommand extends Command
 				foreach ($lines as $line) {
 					$parser = new LineParser($line, $file->type, $logger);
 
-					$indexName = 'logger';
-					$date = \Carbon\Carbon::now();
+					$indexName = getenv('ELATICSEARCH_INDEX_NAME');
 					$body = $parser->toArray();
+					$date = Carbon::now();
 					if (isset($body)) {
 						$params = [
 							'index' => "{$indexName}-{$date->year}.{$date->month}.{$date->day}",
 							'type' => $file->type,
-							'body' => $body
+							'body' => $body,
+							'id' => $parser->id
 						];
 						try {
 							$response = $elasticsearch->client->index($params);

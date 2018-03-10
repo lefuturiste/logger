@@ -15,7 +15,8 @@
         "guzzlehttp/guzzle": "^6.3",
         "phois/whois": "dev-master",
         "phpwhois/phpwhois": "^4.2",
-        "nopjmp/discord-webhooks": "^0.2.2"
+        "nopjmp/discord-webhooks": "^0.2.2",
+        "ramsey/uuid": "^3.7"
     },
     "autoload": {
         "psr-4": {

@@ -24,7 +24,7 @@ class SingleRunCommand extends Command
 			// the name of the command (the part after "bin/console")
 			->setName('app:single-run')
 			// the short description shown while running "php bin/console list"
-			->setDescription('Single run application');
+			->setDescription('Single run application WARNING : THIS COMMAND IS DECAPRITED USE app:logger command instead');
 	}
 
 	protected function execute(InputInterface $input, OutputInterface $output)
