@@ -4,7 +4,6 @@ namespace App\Logger\Parser;
 
 use App\Logger\App;
 use GeoIp2\Database\Reader;
-use Ramsey\Uuid\Uuid;
 
 class LineParser
 {
@@ -57,8 +56,7 @@ class LineParser
 	 */
 	public function generateId()
 	{
-		$uuid5 = Uuid::uuid5(Uuid::NAMESPACE_DNS, 'php.net');
-		return $uuid5->toString();
+		return hash('sha256', time());
 	}
 
 	public function toArray()
